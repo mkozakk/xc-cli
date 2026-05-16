@@ -65,8 +65,10 @@ func main() {
 	}
 }
 
+const maxStdinBytes = 50 * 1024 * 1024 // 50 MB
+
 func modeStandardPipe() error {
-	stdin, err := io.ReadAll(os.Stdin)
+	stdin, err := io.ReadAll(io.LimitReader(os.Stdin, maxStdinBytes))
 	if err != nil {
 		return fmt.Errorf("read stdin: %w", err)
 	}
@@ -79,7 +81,7 @@ func modeContextPipe() error {
 		return err
 	}
 
-	output, err := io.ReadAll(os.Stdin)
+	output, err := io.ReadAll(io.LimitReader(os.Stdin, maxStdinBytes))
 	if err != nil {
 		return fmt.Errorf("read stdin: %w", err)
 	}
