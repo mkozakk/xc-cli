@@ -1,0 +1,20 @@
+# Build artifacts
+/xc
+/dist
+*.o
+*.a
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+coverage.out
+*.tmp
