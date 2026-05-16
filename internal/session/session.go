@@ -15,14 +15,21 @@ type Session struct {
 
 var ErrNoSession = errors.New("no session file found; is the shell hook installed? Run: eval \"$(xc init bash)\"")
 
-func FilePath(user, shellPID string) string {
-	return fmt.Sprintf("/tmp/xc_%s_%s.tmp", user, shellPID)
+func baseDir() string {
+	if dir := os.Getenv("XDG_RUNTIME_DIR"); dir != "" {
+		return dir
+	}
+	return "/tmp"
+}
+
+func FilePath(uid, shellPID string) string {
+	return fmt.Sprintf("%s/xc_%s_%s.tmp", baseDir(), uid, shellPID)
 }
 
 func CurrentFilePath() string {
-	user := os.Getenv("USER")
+	uid := fmt.Sprint(os.Getuid())
 	shellPID := fmt.Sprint(os.Getppid())
-	return FilePath(user, shellPID)
+	return FilePath(uid, shellPID)
 }
 
 func Read(path string) (*Session, error) {

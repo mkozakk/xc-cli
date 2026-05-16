@@ -2,7 +2,8 @@ package shell
 
 const bashHookTemplate = `
 __xc_session_file() {
-    echo "/tmp/xc_${USER}_$$.tmp"
+    local dir="${XDG_RUNTIME_DIR:-/tmp}"
+    echo "${dir}/xc_$(id -u)_$$.tmp"
 }
 
 __xc_cmd=""
@@ -16,7 +17,7 @@ __xc_preexec() {
     [[ "$cmd" == xc* ]] && return
 
     __xc_cmd="$cmd"
-    __xc_outfile="$(mktemp /tmp/xc_out_XXXXXX)"
+    __xc_outfile="$(mktemp "${XDG_RUNTIME_DIR:-/tmp}/xc_out_XXXXXX")"
     __xc_capturing=1
 
     exec 3>&1 4>&2
