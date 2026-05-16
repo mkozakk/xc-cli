@@ -49,6 +49,6 @@ changelog:
 release:
   github:
     owner: mkozakk
-    name: xc
+    name: xc-cli
   draft: false
   prerelease: auto
