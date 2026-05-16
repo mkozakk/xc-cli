@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REPO="mkozakk/xc"
+REPO="mkozakk/xc-cli"
 INSTALL_DIR="${XC_INSTALL_DIR:-$HOME/.local/bin}"
 BINARY_NAME="xc"
 

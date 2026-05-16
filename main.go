@@ -148,7 +148,7 @@ Examples:
   xc -l
   xc -lc
 
-For more information, visit: https://github.com/YOUR_GITHUB_USER/xc
+For more information, visit: https://github.com/mkozakk/xc-cli
 `
 	fmt.Print(help)
 }

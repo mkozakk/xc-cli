@@ -30,15 +30,15 @@ xc -lc
 The installer script does everything for you — downloads the right binary for your architecture, installs it, and patches your shell config:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/mkozakk/xc/main/scripts/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/mkozakk/xc-cli/main/scripts/install.sh | bash
 ```
 
 The script will automatically detect your architecture, download the latest binary from github verify hecksum, and set up the shell hook for bash or zsh. Just restart your terminal and you're ready to go.
 
 If you prefer to build from source:
 ```bash
-git clone https://github.com/YOUR_GITHUB_USER/xc
-cd xc && go build -o xc . && install -m755 xc ~/.local/bin/xc
+git clone https://github.com/mkozakk/xc-cli
+cd xc-cli && go build -o xc . && install -m755 xc ~/.local/bin/xc
 eval "$(./xc init bash)"  # or zsh
 ```
 
@@ -55,7 +55,7 @@ exec 1> >(tee -a capture) 2>&1   # redirect through tee
 exec 1>&3 2>&4                    # restore originals
 ```
 
-The captured command and output are written to a temporary session file at `/tmp/xc_${USER}_$$.tmp`. When you run `xc -l` or `xc -lc`, those flags just read this file and copy the content to your clipboard.
+The captured command and output are written to a temporary session file at `${XDG_RUNTIME_DIR:-/tmp}/xc_$(id -u)_$$.tmp`. When you run `xc -l` or `xc -lc`, those flags just read this file and copy the content to your clipboard.
 
 **Clipboard backends:** The tool auto-detects which clipboard command is available on your system. On Wayland, it prefers `wl-copy`. On X11, it tries `xclip` first.
 
