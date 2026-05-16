@@ -35,10 +35,6 @@ func Detect() (Backend, error) {
 		}
 	}
 
-	if _, err := exec.LookPath("wl-copy"); err == nil {
-		return BackendWlCopy, nil
-	}
-
 	if _, err := exec.LookPath("xclip"); err == nil {
 		return BackendXclip, nil
 	}
