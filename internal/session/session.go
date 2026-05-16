@@ -51,8 +51,10 @@ func Read(path string) (*Session, error) {
 	}
 
 	cmdLine := lines[0]
-	cmd := strings.TrimPrefix(cmdLine, "CMD:")
-	cmd = strings.TrimSpace(cmd)
+	if !strings.HasPrefix(cmdLine, "CMD:") {
+		return nil, fmt.Errorf("expected CMD: marker, got: %s", cmdLine)
+	}
+	cmd := strings.TrimSpace(strings.TrimPrefix(cmdLine, "CMD:"))
 
 	if len(lines) < 2 {
 		return &Session{Command: cmd, Output: ""}, nil
