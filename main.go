@@ -72,6 +72,7 @@ func modeStandardPipe() error {
 	if err != nil {
 		return fmt.Errorf("read stdin: %w", err)
 	}
+	os.Stdout.Write(stdin)
 	return clipboard.Write(string(stdin))
 }
 
@@ -86,6 +87,7 @@ func modeContextPipe() error {
 		return fmt.Errorf("read stdin: %w", err)
 	}
 
+	os.Stdout.Write(output)
 	text := fmt.Sprintf("$ %s\n%s", sess.Command, string(output))
 	return clipboard.Write(text)
 }

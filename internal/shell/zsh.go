@@ -16,6 +16,16 @@ __xc_preexec() {
     [[ "$cmd" == __xc_* ]] && return
 
     __xc_cmd="$cmd"
+
+    # Write command immediately so xc can read it when running inside a pipeline
+    local session_file
+    session_file="$(__xc_session_file)"
+    {
+        print "CMD:${__xc_cmd}"
+        print "OUTPUT:"
+    } > "$session_file"
+    chmod 600 "$session_file"
+
     __xc_outfile="$(mktemp "${XDG_RUNTIME_DIR:-/tmp}/xc_out_XXXXXX")"
     __xc_capturing=1
 

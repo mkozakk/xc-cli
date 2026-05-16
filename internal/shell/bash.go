@@ -47,7 +47,15 @@ __xc_precmd() {
 
 __xc_debug_trap() {
     if [[ "$BASH_COMMAND" != __xc_* ]] && [[ -z "$__xc_last_cmd" ]]; then
-        __xc_last_cmd="$BASH_COMMAND"
+        # Use history for the full pipeline text; fall back to BASH_COMMAND for the first word
+        __xc_last_cmd="$(HISTTIMEFORMAT= history 1 | sed 's/^[[:space:]]*[0-9]*[[:space:]]*//')"
+        [[ -z "$__xc_last_cmd" ]] && __xc_last_cmd="$BASH_COMMAND"
+
+        # Write command immediately so xc can read it when running inside a pipeline
+        local session_file
+        session_file="$(__xc_session_file)"
+        { echo "CMD:${__xc_last_cmd}"; echo "OUTPUT:"; } > "$session_file"
+        chmod 600 "$session_file"
     fi
 }
 
