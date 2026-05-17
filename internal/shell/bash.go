@@ -30,8 +30,10 @@ __xc_precmd() {
         exec 1>&3 2>&4
         exec 3>&- 4>&-
 
-        local session_file
+        local session_file tmp_session
         session_file="$(__xc_session_file)"
+        tmp_session="$(mktemp "${XDG_RUNTIME_DIR:-/tmp}/xc_sess_XXXXXX")"
+        chmod 600 "$tmp_session"
         {
             echo "CMD:${__xc_cmd}"
             echo "OUTPUT:"
@@ -39,23 +41,23 @@ __xc_precmd() {
                 cat "$__xc_outfile"
                 rm -f "$__xc_outfile"
             fi
-        } > "$session_file"
-        chmod 600 "$session_file"
+        } > "$tmp_session"
+        mv -f "$tmp_session" "$session_file"
     fi
     __xc_last_cmd=""
 }
 
 __xc_debug_trap() {
     if [[ "$BASH_COMMAND" != __xc_* ]] && [[ -z "$__xc_last_cmd" ]]; then
-        # Use history for the full pipeline text; fall back to BASH_COMMAND for the first word
         __xc_last_cmd="$(HISTTIMEFORMAT= history 1 | sed 's/^[[:space:]]*[0-9]*[[:space:]]*//')"
         [[ -z "$__xc_last_cmd" ]] && __xc_last_cmd="$BASH_COMMAND"
 
-        # Write command immediately so xc can read it when running inside a pipeline
-        local session_file
+        local session_file tmp_session
         session_file="$(__xc_session_file)"
-        { echo "CMD:${__xc_last_cmd}"; echo "OUTPUT:"; } > "$session_file"
-        chmod 600 "$session_file"
+        tmp_session="$(mktemp "${XDG_RUNTIME_DIR:-/tmp}/xc_sess_XXXXXX")"
+        chmod 600 "$tmp_session"
+        { echo "CMD:${__xc_last_cmd}"; echo "OUTPUT:"; } > "$tmp_session"
+        mv -f "$tmp_session" "$session_file"
     fi
 }
 

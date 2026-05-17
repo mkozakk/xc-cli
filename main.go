@@ -34,7 +34,7 @@ func main() {
 
 	flagContext := flag.Bool("c", false, "prefix output with '$ <command>'")
 	flagLast := flag.Bool("l", false, "copy the last command from session")
-	flag.Parse()
+	flag.CommandLine.Parse(expandCombinedFlags(os.Args[1:])) //nolint:errcheck
 
 	stat, _ := os.Stdin.Stat()
 	isPiped := (stat.Mode() & os.ModeCharDevice) == 0
@@ -65,7 +65,7 @@ func main() {
 	}
 }
 
-const maxStdinBytes = 50 * 1024 * 1024 // 50 MB
+const maxStdinBytes = 50 * 1024 * 1024
 
 func modeStandardPipe() error {
 	stdin, err := io.ReadAll(io.LimitReader(os.Stdin, maxStdinBytes))
@@ -97,7 +97,7 @@ func modeLastCommand() error {
 	if err != nil {
 		return err
 	}
-	return clipboard.Write(sess.Command)
+	return clipboard.Write(sess.Output)
 }
 
 func modeLastCommandWithOutput() error {
@@ -108,6 +108,20 @@ func modeLastCommandWithOutput() error {
 
 	text := fmt.Sprintf("$ %s\n%s", sess.Command, sess.Output)
 	return clipboard.Write(text)
+}
+
+func expandCombinedFlags(args []string) []string {
+	expanded := make([]string, 0, len(args))
+	for _, arg := range args {
+		if len(arg) > 2 && arg[0] == '-' && arg[1] != '-' {
+			for _, ch := range arg[1:] {
+				expanded = append(expanded, "-"+string(ch))
+			}
+		} else {
+			expanded = append(expanded, arg)
+		}
+	}
+	return expanded
 }
 
 func handleInit() {
@@ -138,8 +152,8 @@ func printHelp() {
 Usage:
   command | xc              Copy output to clipboard
   command | xc -c           Copy "$ command\noutput" to clipboard
-  xc -l                     Copy the last command text
-  xc -l -c                  Copy the last command + its output
+  xc -l                     Copy the last command's output
+  xc -lc                    Copy "$ command\noutput" for the last command
   xc init [bash|zsh]        Print shell hook to add to ~/.bashrc or ~/.zshrc
   xc version                Show version information
   xc --help                 Show this help

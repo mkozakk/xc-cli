@@ -15,16 +15,19 @@ __xc_preexec() {
     [[ "$cmd" == xc* ]] && return
     [[ "$cmd" == __xc_* ]] && return
 
-    __xc_cmd="$cmd"
+    local display_cmd
+    display_cmd="$(print -r -- "$cmd" | sed 's/[[:space:]]*|[[:space:]]*xc\b.*$//')"
+    __xc_cmd="${display_cmd:-$cmd}"
 
-    # Write command immediately so xc can read it when running inside a pipeline
-    local session_file
+    local session_file tmp_session
     session_file="$(__xc_session_file)"
+    tmp_session="$(mktemp "${XDG_RUNTIME_DIR:-/tmp}/xc_sess_XXXXXX")"
+    chmod 600 "$tmp_session"
     {
         print "CMD:${__xc_cmd}"
         print "OUTPUT:"
-    } > "$session_file"
-    chmod 600 "$session_file"
+    } > "$tmp_session"
+    mv -f "$tmp_session" "$session_file"
 
     __xc_outfile="$(mktemp "${XDG_RUNTIME_DIR:-/tmp}/xc_out_XXXXXX")"
     __xc_capturing=1
@@ -39,23 +42,30 @@ __xc_precmd() {
         exec 1>&3 2>&4
         exec 3>&- 4>&-
 
-        local session_file
+        local session_file tmp_session
         session_file="$(__xc_session_file)"
+        tmp_session="$(mktemp "${XDG_RUNTIME_DIR:-/tmp}/xc_sess_XXXXXX")"
+        chmod 600 "$tmp_session"
         {
             print "CMD:${__xc_cmd}"
             print "OUTPUT:"
             if [[ -f "$__xc_outfile" ]]; then
-                cat "$__xc_outfile"
+                sed $'s/\x1b\[[0-9;]*[mGKHFABCDsuhjJK]//g; s/\x1b][^\x07]*\x07//g; s/\r//g' "$__xc_outfile"
                 rm -f "$__xc_outfile"
             fi
-        } > "$session_file"
-        chmod 600 "$session_file"
+        } > "$tmp_session"
+        mv -f "$tmp_session" "$session_file"
     fi
+}
+
+command_not_found_handler() {
+    print "zsh: command not found: $1" >&2
+    return 127
 }
 
 autoload -Uz add-zsh-hook
 add-zsh-hook preexec __xc_preexec
-add-zsh-hook precmd __xc_precmd
+precmd_functions=(__xc_precmd "${precmd_functions[@]}")
 `
 
 func ZshHook() string {
