@@ -110,8 +110,58 @@ case "$CURRENT_SHELL" in
         ;;
 esac
 
+check_clipboard_deps() {
+    local wayland=0
+    [[ -n "${WAYLAND_DISPLAY:-}" ]] && wayland=1
+
+    # check if any clipboard tool is already present
+    if (( wayland )); then
+        command -v wl-copy &>/dev/null && return 0
+    fi
+    command -v xclip &>/dev/null && return 0
+    command -v xsel  &>/dev/null && return 0
+
+    # detect package manager
+    local pm="" pkg_wl="wl-clipboard" pkg_x="xclip"
+    if   command -v apt-get &>/dev/null; then pm="apt-get install -y"
+    elif command -v dnf     &>/dev/null; then pm="dnf install -y"
+    elif command -v pacman  &>/dev/null; then pm="pacman -S --noconfirm"
+    elif command -v zypper  &>/dev/null; then pm="zypper install -y"
+    elif command -v emerge  &>/dev/null; then pm="emerge"
+    fi
+
+    local recommended
+    if (( wayland )); then
+        recommended="$pkg_wl"
+    else
+        recommended="$pkg_x"
+    fi
+
+    echo ""
+    echo "Warning: no clipboard tool found. xc needs one to copy output to your clipboard."
+
+    if [[ -z "$pm" ]]; then
+        echo "Install one of: wl-clipboard (Wayland), xclip, or xsel"
+        return
+    fi
+
+    if [[ -t 0 ]]; then
+        printf "Install %s now? [Y/n] " "$recommended"
+        read -r answer
+        if [[ "${answer:-y}" =~ ^[Yy]$ ]]; then
+            sudo $pm "$recommended"
+        else
+            echo "Skipped. To install manually: sudo $pm $recommended"
+        fi
+    else
+        echo "To install: sudo $pm $recommended"
+    fi
+}
+
+check_clipboard_deps
+
 echo ""
-echo "Installation complete! 🎉"
+echo "Installation complete!"
 
 if [[ -n "$RC_FILE" ]]; then
     echo ""
