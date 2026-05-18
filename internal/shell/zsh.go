@@ -10,10 +10,38 @@ __xc_cmd=""
 __xc_outfile=""
 __xc_capturing=0
 
+__xc_skip_cmd() {
+    [[ ! -t 0 || ! -t 1 ]] && return 0
+
+    local cmd="$1"
+    local base_cmd="${cmd%% *}"
+    base_cmd="${base_cmd##*/}"
+
+    local skip_cmds=" vi vim nvim nano emacs micro joe kak helix hx vis \
+less more most view rview \
+top htop btop bpytop glances iotop iftop bmon atop nmon vtop gtop bashtop \
+screen tmux mosh ssh telnet rlogin minicom picocom tio \
+gdb lldb strace ltrace perf \
+python python3 ipython irb node deno bun lua luajit ghci julia \
+ranger lf nnn yazi mc tig gitui \
+lazygit lazydocker k9s fzf watch ncdu duf \
+mysql psql sqlite3 redis-cli mongosh mongo mycli pgcli litecli \
+sudo sudoedit su doas pkexec passwd htpasswd chpasswd openssl \
+claude calude aichat aider mods gh amazon-q copilot aws awslocal gptme open-interpreter interpreter ollama gum clear"
+
+    [[ " $skip_cmds " == *" $base_cmd "* ]] && return 0
+    
+    local custom_skip_cmds="${XC_SKIP_CMDS:-}"
+    [[ -n "$custom_skip_cmds" && " $custom_skip_cmds " == *" $base_cmd "* ]] && return 0
+
+    return 1
+}
+
 __xc_preexec() {
     local cmd="$1"
     [[ "$cmd" == xc* ]] && return
     [[ "$cmd" == __xc_* ]] && return
+    __xc_skip_cmd "$cmd" && return
 
     local display_cmd
     display_cmd="$(print -r -- "$cmd" | sed 's/[[:space:]]*|[[:space:]]*xc\b.*$//')"
